@@ -159,79 +159,8 @@
               class="mt-4 w-full rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               v-model="this.customers.newCustomerMobileNo"
             />
-            <div class="relative mt-5" ref="container">
-              <label
-                for="customerGroup"
-                class="mt-6 block text-left text-gray-900 dark:text-white"
-              >
-                Customer Group
-              </label>
-              <input
-                type="text"
-                id="customerGroup"
-                class="mt-4 w-full rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                v-model="this.customers.customerGroup"
-                @click="
-                  this.customers.showCustomersGroup = true;
-                  this.customers.pickCustomerGroup();
-                "
-                required
-              />
 
-              <div
-                v-if="this.customers.showCustomersGroup"
-                class="absolute left-0 top-full z-10 max-h-64 w-full overflow-y-scroll rounded bg-white shadow"
-                ref="dropdown"
-              >
-                <div
-                  class="h-12 rounded-lg p-4 hover:bg-gray-100"
-                  v-for="(group, index) in this.customers.customerGroupList"
-                  :key="index"
-                  @click="this.customers.selectCustomerGroup(group)"
-                >
-                  <h1 class="text-base font-semibold leading-normal">
-                    {{ group.name }}
-                  </h1>
-                </div>
-              </div>
-            </div>
-            <div class="relative mt-5" ref="container">
-              <label
-                for="territory"
-                class="mt-6 block text-left text-gray-900 dark:text-white"
-              >
-                Territory
-              </label>
-              <input
-                type="text"
-                id="territory"
-                class="mt-4 w-full rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                v-model="this.customers.customerTerritory"
-                @click="
-                  this.customers.showCustomersTerritory = true;
-                  this.customers.pickCustomerTerritory();
-                "
-                required
-              />
-
-              <div
-                v-if="this.customers.showCustomersTerritory"
-                class="absolute left-0 top-full z-10 max-h-64 w-full overflow-y-scroll rounded bg-white shadow"
-                ref="dropdown"
-              >
-                <div
-                  class="h-12 rounded-lg p-4 hover:bg-gray-100"
-                  v-for="(territory, index) in this.customers
-                    .customerTerritoryList"
-                  :key="index"
-                  @click="this.customers.selectCustomerTerritory(territory)"
-                >
-                  <h1 class="text-base font-semibold leading-normal">
-                    {{ territory.name }}
-                  </h1>
-                </div>
-              </div>
-            </div>
+            <!-- Customer Group va Territory maydonlari yashirilgan -->
 
             <div class="flex justify-end">
               <button

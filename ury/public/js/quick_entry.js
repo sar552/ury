@@ -24,17 +24,9 @@ frappe.ui.form.CustomerQuickEntryForm = class POSQuickEntryForm extends frappe.u
                 label: __("Mobile Number"),
                 fieldname: "mobile_number",
                 fieldtype: "Int"
-            },
-            {
-                label: __("Customer Group"),
-                fieldname: "customer_group",
-                fieldtype: "Link"
-            },
-            {
-                label: __("Customer Territory"),
-                fieldname: "territory",
-                fieldtype: "Link"
             }
+            // Customer Group va Territory maydonlari yashirilgan
+            // Default qiymatlar backend da belgilanadi
         ];
 
         return variant_fields;

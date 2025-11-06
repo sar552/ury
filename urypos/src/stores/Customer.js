@@ -115,6 +115,7 @@ export const useCustomerStore = defineStore("customers", {
     },
     
     addNewCustomer: async function () {
+      // Customer Group va Territory yashirilgan, faqat Customer Name va Mobile Number tekshiriladi
       if (!this.newCustomer || !this.newCustomerMobileNo) {
         let missingFields = [];
         if (!this.newCustomer) {
@@ -123,23 +124,22 @@ export const useCustomerStore = defineStore("customers", {
         if (!this.newCustomerMobileNo) {
           missingFields.push("Mobile Number");
         }
-        if (!this.customerGroup) {
-          missingFields.push("Customer Group");
-        }
-        if (!this.customerTerritory) {
-          missingFields.push("Territory");
-        }
         const missingFieldsMessage =
           "Following fields have missing values: " + missingFields.join(", ");
         this.alert.createAlert("Message", missingFieldsMessage, "OK");
       } else {
         this.showAddNewCustomer = false;
         const db = frappe.db();
+
+        // Default Customer Group va Territory qiymatlari
+        const defaultCustomerGroup = this.customerGroup || "All Customer Groups";
+        const defaultTerritory = this.customerTerritory || "All Territories";
+
         db.createDoc("Customer", {
           customer_name: this.newCustomer,
           mobile_number: this.newCustomerMobileNo.toString(),
-          customer_group: this.customerGroup,
-          territory: this.customerTerritory,
+          customer_group: defaultCustomerGroup,
+          territory: defaultTerritory,
         })
           .then((doc) => {
             this.search = doc.name;

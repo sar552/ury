@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { UserPlus, Mail, Phone, Loader } from 'lucide-react';
-import { usePOSStore, type Customer } from '../store/pos-store';
+import { UserPlus, Phone, Loader } from 'lucide-react';
+import { usePOSStore } from '../store/pos-store';
 import { Button, Dialog, DialogContent, Input } from './ui';
-import { Select, SelectItem } from './ui';
 import { ChevronDown } from 'lucide-react';
 import React from 'react';
 import { addCustomer, type CreateCustomerData, searchCustomers } from '../lib/customer-api';
 import { AggregatorSelect } from './AggregatorSelect';
-
 // NewCustomerForm component
 function NewCustomerForm({ 
   onClose, 
@@ -24,15 +22,11 @@ function NewCustomerForm({
   prefillName?: string;
   prefillPhone?: string;
 }) {
-  const { customerGroups, territories, fetchCustomerGroups, fetchTerritories, setSelectedCustomer } = usePOSStore();
+  const { setSelectedCustomer } = usePOSStore();
   const [newCustomerName, setNewCustomerName] = React.useState('');
   const [newCustomerPhone, setNewCustomerPhone] = React.useState('');
-  const [newCustomerGroup, setNewCustomerGroup] = React.useState("");
-  const [newCustomerTerritory, setNewCustomerTerritory] = React.useState("");
   const [formError, setFormError] = React.useState(false);
   const [apiError, setApiError] = React.useState<string>("");
-  const [loadingGroups, setLoadingGroups] = React.useState(false);
-  const [loadingTerritories, setLoadingTerritories] = React.useState(false);
   
   // Use parent loading state if available, otherwise fallback to local state
   const [localIsCreatingCustomer, setLocalIsCreatingCustomer] = React.useState(false);
@@ -48,20 +42,6 @@ function NewCustomerForm({
       setNewCustomerPhone(prefillPhone);
     }
   }, [prefillName, prefillPhone]);
-
-  // Fetch groups/territories on mount
-  React.useEffect(() => {
-    if (!customerGroups.length) {
-      setLoadingGroups(true);
-      fetchCustomerGroups().finally(() => setLoadingGroups(false));
-    }
-    if (!territories.length) {
-      setLoadingTerritories(true);
-      fetchTerritories().finally(() => setLoadingTerritories(false));
-    }
-  }, []);
-
-
 
   async function handleAddCustomerSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,14 +60,6 @@ function NewCustomerForm({
         mobile_number: newCustomerPhone.trim(),
       };
 
-      // Add optional fields only if they have values
-      if (newCustomerGroup) {
-        customerData.customer_group = newCustomerGroup;
-      }
-      if (newCustomerTerritory) {
-        customerData.territory = newCustomerTerritory;
-      }
-
       const response = await addCustomer(customerData);
       const created = response.data;
       // Set selected customer in POS store
@@ -99,8 +71,6 @@ function NewCustomerForm({
       // Reset form on success
       setNewCustomerName("");
       setNewCustomerPhone("");
-      setNewCustomerGroup("");
-      setNewCustomerTerritory("");
       if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
@@ -152,42 +122,6 @@ function NewCustomerForm({
           <div className="text-xs text-red-500 mt-1">Phone is required</div>
         )}
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Group</label>
-        <Select
-          placeholder={loadingGroups ? 'Loading...' : 'Select group'}
-          value={newCustomerGroup}
-          onValueChange={setNewCustomerGroup}
-          disabled={isCreatingCustomer || loadingGroups || !customerGroups.length}
-        >
-          {customerGroups.map((group) => (
-            <SelectItem key={group} value={group} className="capitalize">
-              {group}
-            </SelectItem>
-          ))}
-        </Select>
-        {!loadingGroups && !customerGroups.length && (
-          <div className="text-xs text-gray-400 mt-1">No options</div>
-        )}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
-        <Select
-          placeholder={loadingTerritories ? 'Loading...' : 'Select territory'}
-          value={newCustomerTerritory}
-          onValueChange={setNewCustomerTerritory}
-          disabled={isCreatingCustomer || loadingTerritories || !territories.length}
-        >
-          {territories.map((territory) => (
-            <SelectItem key={territory} value={territory} className="capitalize">
-              {territory}
-            </SelectItem>
-          ))}
-        </Select>
-        {!loadingTerritories && !territories.length && (
-          <div className="text-xs text-gray-400 mt-1">No options</div>
-        )}
-      </div>
       <div className="flex gap-3 mt-6">
         <Button
           type="submit"
@@ -221,7 +155,7 @@ interface CustomerSelectProps {
   disabled?: boolean;
 }
 
-export function CustomerSelect({ disabled }: CustomerSelectProps) {
+export function CustomerSelect({ disabled }: CustomerSelectProps = {}) {
   const { selectedCustomer, setSelectedCustomer, selectedOrderType, isUpdatingOrder } = usePOSStore();
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
@@ -251,7 +185,7 @@ export function CustomerSelect({ disabled }: CustomerSelectProps) {
           setSearchResults(results);
           setIsSearching(false);
         })
-        .catch(err => {
+        .catch(() => {
           setSearchError('Failed to search customers');
           setIsSearching(false);
         });
@@ -329,7 +263,7 @@ export function CustomerSelect({ disabled }: CustomerSelectProps) {
                 setHighlightedIndex(0);
               }}
               onFocus={() => setIsOpen(true)}
-              onBlur={e => {
+              onBlur={() => {
                 setTimeout(() => setIsOpen(false), 100);
               }}
               onKeyDown={handleKeyDown}
@@ -337,6 +271,7 @@ export function CustomerSelect({ disabled }: CustomerSelectProps) {
               className="w-full h-10 border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               aria-label="Search customer"
               autoComplete="off"
+              disabled={isUpdatingOrder || disabled}
             />
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
@@ -428,4 +363,4 @@ export function CustomerSelect({ disabled }: CustomerSelectProps) {
       )}
     </div>
   );
-} 
+}
