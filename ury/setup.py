@@ -377,6 +377,6 @@ def delete_custom_fields(custom_fields):
 		)
         
         frappe.clear_cache(doctype=doctype)
- 
- 
-    
+
+
+

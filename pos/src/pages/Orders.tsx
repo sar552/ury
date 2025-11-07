@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Clock, User, UserCheck, Receipt, Printer, Pencil, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Clock, User, UserCheck, Receipt, Printer, Pencil, X, MapPin } from 'lucide-react';
 import { Badge, Button, Card, CardContent } from '../components/ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { showToast } from '../components/ui/toast';
@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import PaymentDialog from '../components/PaymentDialog';
 import { printOrder } from '../lib/print';
 import { call } from '../lib/frappe-sdk';
+import QRCode from 'qrcode';
 
 export default function Orders() {
   const { 
@@ -44,6 +45,10 @@ export default function Orders() {
   const [editLoading, setEditLoading] = React.useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = React.useState(false);
   const [isPrinting, setIsPrinting] = React.useState(false);
+  const [isPrintingAddress, setIsPrintingAddress] = useState(false);
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [showAddressDialog, setShowAddressDialog] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -58,6 +63,316 @@ export default function Orders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderSearchQuery]);
 
+  // Fetch customer address when order is selected
+  useEffect(() => {
+    if (selectedOrder?.customer) {
+      fetchCustomerDetails(selectedOrder.customer);
+    } else {
+      setCustomerAddress('');
+      setCustomerPhone('');
+    }
+  }, [selectedOrder]);
+
+  // Fetch customer details (address and phone)
+  async function fetchCustomerDetails(customerId: string) {
+    try {
+      const response = await fetch(`/api/resource/Customer/${customerId}`, {
+        headers: {
+          'X-Frappe-CSRF-Token': (window as any).csrf_token || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch customer details');
+      const data = await response.json();
+      setCustomerAddress(data.data.custom_manzil || '');
+      setCustomerPhone(data.data.mobile_no || data.data.mobile_number || '');
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+      setCustomerAddress('');
+      setCustomerPhone('');
+    }
+  }
+
+  // Generate QR Code as Data URL
+  async function generateQRCode(data: string): Promise<string> {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(data, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+      });
+      return qrDataUrl;
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      throw error;
+    }
+  }
+
+  // Print customer address with QR code
+  async function handlePrintAddress() {
+    if (!selectedOrder || !customerAddress) {
+      showToast.error('Customer address not available');
+      return;
+    }
+
+    setIsPrintingAddress(true);
+    try {
+      // Prepare data for QR code
+      const qrData = JSON.stringify({
+        name: (selectedOrder as any).customer_name || selectedOrder.customer,
+        phone: customerPhone,
+        address: customerAddress,
+        order: selectedOrder.name,
+      });
+
+      // Generate QR code
+      const qrCodeDataUrl = await generateQRCode(qrData);
+
+      const printWindow = window.open('', '', 'width=800,height=600');
+      if (!printWindow) {
+        throw new Error('Failed to open print window');
+      }
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Customer Address - ${selectedOrder.name}</title>
+            <meta charset="utf-8">
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              body { 
+                font-family: Arial, sans-serif;
+                padding: 30px;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              .header {
+                border-bottom: 2px solid #333;
+                padding-bottom: 15px;
+                margin-bottom: 25px;
+              }
+              h1 {
+                font-size: 28px;
+                margin-bottom: 5px;
+                color: #333;
+              }
+              .order-info {
+                font-size: 14px;
+                color: #666;
+              }
+              .content-wrapper {
+                display: flex;
+                gap: 30px;
+                margin-bottom: 30px;
+              }
+              .customer-section {
+                flex: 1;
+              }
+              .qr-section {
+                flex-shrink: 0;
+                text-align: center;
+              }
+              .customer-name {
+                font-size: 20px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 15px;
+              }
+              .info-item {
+                margin-bottom: 20px;
+              }
+              .info-label {
+                font-size: 12px;
+                color: #666;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                font-weight: 600;
+              }
+              .info-content {
+                font-size: 16px;
+                color: #333;
+                background: #f5f5f5;
+                padding: 12px;
+                border-radius: 5px;
+                border: 1px solid #ddd;
+              }
+              .address-content {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+              }
+              .qr-code {
+                border: 2px solid #333;
+                padding: 15px;
+                border-radius: 8px;
+                background: white;
+                display: inline-block;
+              }
+              .qr-code img {
+                display: block;
+                width: 250px;
+                height: 250px;
+              }
+              .qr-label {
+                font-size: 12px;
+                color: #666;
+                margin-top: 10px;
+              }
+              .footer {
+                margin-top: 30px;
+                padding-top: 15px;
+                border-top: 1px solid #ddd;
+                font-size: 12px;
+                color: #999;
+                text-align: center;
+              }
+              .no-print {
+                margin-top: 20px;
+                text-align: center;
+              }
+              .no-print button {
+                padding: 10px 20px;
+                margin: 0 5px;
+                font-size: 14px;
+                cursor: pointer;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                background: #fff;
+              }
+              .no-print button:hover {
+                background: #f5f5f5;
+              }
+              .no-print button.primary {
+                background: #007bff;
+                color: white;
+                border-color: #007bff;
+              }
+              .no-print button.primary:hover {
+                background: #0056b3;
+              }
+              @media print {
+                body { padding: 20px; }
+                .no-print { display: none !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Customer Delivery Information</h1>
+              <div class="order-info">Order: ${selectedOrder.name}</div>
+            </div>
+            
+            <div class="content-wrapper">
+              <div class="customer-section">
+                <div class="customer-name">${(selectedOrder as any).customer_name || selectedOrder.customer}</div>
+                
+                <div class="info-item">
+                  <div class="info-label">Phone Number</div>
+                  <div class="info-content">${customerPhone || 'N/A'}</div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-label">Delivery Address</div>
+                  <div class="info-content address-content">${customerAddress}</div>
+                </div>
+              </div>
+
+              <div class="qr-section">
+                <div class="qr-code">
+                  <img src="${qrCodeDataUrl}" alt="QR Code" />
+                </div>
+                <div class="qr-label">Scan for details</div>
+              </div>
+            </div>
+
+            <div class="footer">
+              Printed on ${new Date().toLocaleString()}
+            </div>
+
+            <div class="no-print">
+              <button class="primary" onclick="window.print()">Print</button>
+              <button onclick="saveAsImage()">Save as Image</button>
+              <button onclick="window.close()">Close</button>
+            </div>
+
+            <script>
+              function saveAsImage() {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size
+                canvas.width = 800;
+                canvas.height = 1000;
+                
+                // Fill white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw content (simplified - in production use html2canvas library)
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('Customer Delivery Information', 30, 50);
+                
+                ctx.font = '14px Arial';
+                ctx.fillText('Order: ${selectedOrder.name}', 30, 80);
+                
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText('${(selectedOrder as any).customer_name || selectedOrder.customer}', 30, 130);
+                
+                ctx.font = '14px Arial';
+                ctx.fillText('Phone: ${customerPhone || 'N/A'}', 30, 170);
+                
+                ctx.fillText('Address:', 30, 210);
+                const addressLines = '${customerAddress}'.split('\\n');
+                addressLines.forEach((line, i) => {
+                  ctx.fillText(line, 30, 240 + (i * 20));
+                });
+                
+                // Draw QR code
+                const qrImg = new Image();
+                qrImg.onload = function() {
+                  ctx.drawImage(qrImg, 500, 130, 250, 250);
+                  
+                  // Download
+                  canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'customer-address-${selectedOrder.name}.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  });
+                };
+                qrImg.src = '${qrCodeDataUrl}';
+              }
+            </script>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      showToast.success('Address print/save dialog opened');
+    } catch (error: any) {
+      showToast.error('Failed to generate address: ' + (error?.message || 'Unknown error'));
+      console.error('Print address error:', error);
+    } finally {
+      setIsPrintingAddress(false);
+    }
+  }
+
+  // Show address dialog instead of direct print
+  function handleShowAddressDialog() {
+    if (!customerAddress) {
+      showToast.error('Customer address not available');
+      return;
+    }
+    setShowAddressDialog(true);
+  }
 
   // Function to format the date and time
   const formatDateTime = (date: string, time: string) => {
@@ -378,6 +693,62 @@ export default function Orders() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* Address Dialog */}
+            <Dialog open={showAddressDialog} onOpenChange={setShowAddressDialog}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Customer Delivery Address</DialogTitle>
+                  <DialogDescription>
+                    Choose to print or save the address with QR code
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="px-6 mb-3">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Customer Name:</p>
+                      <p className="text-base text-gray-900">{(selectedOrder as any).customer_name || selectedOrder.customer}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Phone:</p>
+                      <p className="text-base text-gray-900">{customerPhone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Address:</p>
+                      <p className="text-base text-gray-900 whitespace-pre-wrap">{customerAddress}</p>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAddressDialog(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setShowAddressDialog(false);
+                      handlePrintAddress();
+                    }}
+                    disabled={isPrintingAddress}
+                  >
+                    {isPrintingAddress ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" hideMessage />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Open Print/Save
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto p-6 pb-40">
               {/* Order Header (now only info, not name/buttons) */}
@@ -409,6 +780,19 @@ export default function Orders() {
                     )}
                   </div>
                 </div>
+
+                {/* Customer Address Display */}
+                {customerAddress && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-500 mb-1">Delivery Address:</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{customerAddress}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Order Items */}
@@ -449,21 +833,36 @@ export default function Orders() {
               )}
             </div>
 
-            {/* Sticky Bottom Section - Single Row: Print | Payment | Total */}
+            {/* Sticky Bottom Section */}
             <div className="border-t border-gray-200 p-6 bg-gray-50 sticky bottom-0 left-0 right-0 z-10">
               <div className="flex items-center gap-3 w-full">
-                {/* Print Icon Button */}
+                {/* Print Address Icon Button */}
+                {customerAddress && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0"
+                    onClick={handleShowAddressDialog}
+                    aria-label="Print/Save Address"
+                    disabled={isPrintingAddress}
+                    title="Print or Save Delivery Address"
+                  >
+                    <MapPin className="w-5 h-5" />
+                  </Button>
+                )}
+                {/* Print Invoice Icon Button */}
                 <Button
                   variant="outline"
                   size="icon"
                   className="flex-shrink-0"
                   onClick={handlePrintOrder}
-                  aria-label="Print"
+                  aria-label="Print Invoice"
                   disabled={isPrinting}
+                  title="Print Invoice"
                 >
                   {isPrinting ? <Spinner className="w-5 h-5" hideMessage /> : <Printer className="w-5 h-5" />}
                 </Button>
-                {/* Payment Button - Only show for Draft, Unbilled, and Recently Paid orders */}
+                {/* Payment Button */}
                 {(selectedOrder.status === 'Draft' || selectedOrder.status === 'Unbilled' || selectedOrder.status === 'Recently Paid') && (
                   <Button
                     className="flex-1"

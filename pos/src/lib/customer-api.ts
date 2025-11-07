@@ -15,6 +15,7 @@ export interface Customer {
   mobile_number: string;
   customer_group: string;
   territory: string;
+  custom_manzil?: string; // Address field
   is_internal_customer: number;
   language: string;
   default_commission_rate: number;
@@ -33,8 +34,7 @@ export interface Customer {
 export interface CreateCustomerData {
   customer_name: string;
   mobile_number: string;
-  customer_group?: string;
-  territory?: string;
+  custom_manzil?: string; // Address field
 }
 
 export interface CreateCustomerResponse {
@@ -68,8 +68,17 @@ export async function getCustomerTerritories() {
 
 export async function addCustomer(customerData: CreateCustomerData): Promise<CreateCustomerResponse> {
   try {
-    const response = await db.createDoc(DOCTYPES.CUSTOMER, customerData);
-    return { data: response as Customer };
+    // Prepare data with custom_manzil field
+    const dataToSend = {
+      customer_name: customerData.customer_name,
+      mobile_number: customerData.mobile_number, // Frappe uses mobile_no field
+      custom_manzil: customerData.custom_manzil || '', // Address field
+      customer_group: 'Individual', // Default value
+      territory: 'All Territories', // Default value
+    };
+    
+    const response = await db.createDoc(DOCTYPES.CUSTOMER, dataToSend);
+    return { data: response as unknown as Customer };
   } catch (error) {
     console.error('Error creating customer:', error);
     throw error;

@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { UserPlus, Phone, Loader } from 'lucide-react';
+import { UserPlus, Phone, Loader, MapPin } from 'lucide-react';
 import { usePOSStore } from '../store/pos-store';
 import { Button, Dialog, DialogContent, Input } from './ui';
 import { ChevronDown } from 'lucide-react';
 import React from 'react';
 import { addCustomer, type CreateCustomerData, searchCustomers } from '../lib/customer-api';
 import { AggregatorSelect } from './AggregatorSelect';
+
 // NewCustomerForm component
 function NewCustomerForm({ 
   onClose, 
@@ -25,6 +26,7 @@ function NewCustomerForm({
   const { setSelectedCustomer } = usePOSStore();
   const [newCustomerName, setNewCustomerName] = React.useState('');
   const [newCustomerPhone, setNewCustomerPhone] = React.useState('');
+  const [newCustomerAddress, setNewCustomerAddress] = React.useState('');
   const [formError, setFormError] = React.useState(false);
   const [apiError, setApiError] = React.useState<string>("");
   
@@ -43,6 +45,16 @@ function NewCustomerForm({
     }
   }, [prefillName, prefillPhone]);
 
+  // Yandex Maps'ni ochish va clipboard'dan link olish
+  const handleAddLocation = () => {
+    // Yandex Maps'ni yangi tabda ochish
+    const yandexMapsUrl = 'https://yandex.com/maps/';
+    window.open(yandexMapsUrl, '_blank');
+    
+    // Foydalanuvchiga ko'rsatma
+    alert('Yandex Maps\'dan joy tanlang va linkni nusxalang (share/ulashish tugmasidan). Keyin bu yerga qaytib linkni kiriting.');
+  };
+
   async function handleAddCustomerSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newCustomerName || !newCustomerPhone) {
@@ -58,6 +70,7 @@ function NewCustomerForm({
       const customerData: CreateCustomerData = {
         customer_name: newCustomerName.trim(),
         mobile_number: newCustomerPhone.trim(),
+        custom_manzil: newCustomerAddress.trim(),
       };
 
       const response = await addCustomer(customerData);
@@ -71,6 +84,7 @@ function NewCustomerForm({
       // Reset form on success
       setNewCustomerName("");
       setNewCustomerPhone("");
+      setNewCustomerAddress("");
       if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
@@ -89,7 +103,9 @@ function NewCustomerForm({
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-name">Name <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-name">
+          Name <span className="text-red-500">*</span>
+        </label>
         <Input
           id="new-customer-name"
           type="text"
@@ -104,7 +120,9 @@ function NewCustomerForm({
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-phone">Phone <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-phone">
+          Phone <span className="text-red-500">*</span>
+        </label>
         <div className="relative">
           <Input
             id="new-customer-phone"
@@ -121,6 +139,37 @@ function NewCustomerForm({
         {formError && !newCustomerPhone && (
           <div className="text-xs text-red-500 mt-1">Phone is required</div>
         )}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-address">
+          Address (Yandex Maps Link)
+        </label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              id="new-customer-address"
+              type="text"
+              value={newCustomerAddress}
+              onChange={e => setNewCustomerAddress(e.target.value)}
+              disabled={isCreatingCustomer}
+              placeholder="Yandex Maps linkini kiriting"
+              className="pl-10"
+            />
+            <MapPin className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddLocation}
+            disabled={isCreatingCustomer}
+            className="whitespace-nowrap"
+          >
+            Add Location
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          "Add Location" tugmasini bosing, Yandex Maps'dan joy tanlang va linkni bu yerga kiriting
+        </p>
       </div>
       <div className="flex gap-3 mt-6">
         <Button

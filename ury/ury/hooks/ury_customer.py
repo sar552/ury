@@ -4,11 +4,23 @@ import frappe
 def before_insert(doc, event):
     validate_mobile_number(doc, event)
     set_default_customer_group_and_territory(doc, event)
+    handle_custom_manzil(doc, event)
 
 
 def validate_mobile_number(doc, event):
     if not doc.mobile_number:
         frappe.throw("Mobile Number is Mandatory")
+
+
+def handle_custom_manzil(doc, event):
+    """
+    custom_manzil fieldini handle qilish
+    Agar bo'sh bo'lsa, empty string qo'yadi
+    """
+    if not hasattr(doc, 'custom_manzil'):
+        doc.custom_manzil = ""
+    elif doc.custom_manzil is None:
+        doc.custom_manzil = ""
 
 
 def set_default_customer_group_and_territory(doc, event):
