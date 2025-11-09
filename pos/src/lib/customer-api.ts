@@ -99,3 +99,13 @@ export async function searchCustomers(search: string, limit = 5) {
     throw error;
   }
 }
+
+export async function getDefaultCustomer(): Promise<{ name: string; customer_name: string; mobile_number: string; address: string }> {
+  try {
+    const response = await call.get('ury.ury_pos.api.get_or_create_default_customer');
+    return response.message.data;
+  } catch (error) {
+    console.error('Error getting default customer:', error);
+    throw error;
+  }
+}

@@ -8,8 +8,9 @@ def before_insert(doc, event):
 
 
 def validate_mobile_number(doc, event):
+    # Mobile number is now optional, set default if empty
     if not doc.mobile_number:
-        frappe.throw("Mobile Number is Mandatory")
+        doc.mobile_number = "0000000000"  # Default phone number
 
 
 def handle_custom_manzil(doc, event):

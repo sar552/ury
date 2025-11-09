@@ -57,7 +57,8 @@ function NewCustomerForm({
 
   async function handleAddCustomerSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!newCustomerName || !newCustomerPhone) {
+    // Name is required, but phone is optional
+    if (!newCustomerName) {
       setFormError(true);
       return;
     }
@@ -69,7 +70,7 @@ function NewCustomerForm({
     try {
       const customerData: CreateCustomerData = {
         customer_name: newCustomerName.trim(),
-        mobile_number: newCustomerPhone.trim(),
+        mobile_number: newCustomerPhone.trim() || '0000000000', // Default phone if not provided
         custom_manzil: newCustomerAddress.trim(),
       };
 
@@ -121,7 +122,7 @@ function NewCustomerForm({
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-phone">
-          Phone <span className="text-red-500">*</span>
+          Phone
         </label>
         <div className="relative">
           <Input
@@ -129,16 +130,12 @@ function NewCustomerForm({
             type="tel"
             value={newCustomerPhone}
             onChange={e => setNewCustomerPhone(e.target.value)}
-            required
             disabled={isCreatingCustomer}
             className="pl-10"
-            aria-invalid={!!formError && !newCustomerPhone}
+            placeholder="Optional"
           />
           <Phone className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
         </div>
-        {formError && !newCustomerPhone && (
-          <div className="text-xs text-red-500 mt-1">Phone is required</div>
-        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="new-customer-address">

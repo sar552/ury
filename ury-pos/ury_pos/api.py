@@ -3,6 +3,56 @@ from frappe import _
 from datetime import date, datetime, timedelta
 
 
+@frappe.whitelist()
+def get_or_create_default_customer():
+    """
+    Get or create default customer for orders without customer
+    Returns customer name (string) for backend use or dict for frontend API calls
+    """
+    customer_name = "Guest"
+    
+    try:
+        # Check if default customer exists
+        if not frappe.db.exists("Customer", customer_name):
+            # Get default customer group and territory
+            default_customer_group = frappe.db.get_single_value("Selling Settings", "customer_group") or "Commercial"
+            default_territory = frappe.db.get_single_value("Selling Settings", "territory") or "All Territories"
+            
+            # Create default customer with minimal required fields
+            # Phone and address are intentionally left empty
+            customer = frappe.get_doc({
+                "doctype": "Customer",
+                "customer_name": customer_name,
+                "customer_type": "Individual",
+                "customer_group": default_customer_group,
+                "territory": default_territory,
+            })
+            customer.insert(ignore_permissions=True)
+            frappe.db.commit()
+            frappe.logger().info(f"Default customer '{customer_name}' created successfully")
+        
+        # If called from whitelist (frontend), return dict
+        # If called internally (backend), return just the name
+        if frappe.request:
+            customer = frappe.get_doc("Customer", customer_name)
+            return {
+                "success": True,
+                "data": {
+                    "name": customer.name,
+                    "customer_name": customer.customer_name,
+                    "mobile_number": getattr(customer, 'mobile_number', '') or getattr(customer, 'mobile_no', ''),
+                    "address": getattr(customer, 'custom_manzil', ''),
+                }
+            }
+        else:
+            # Internal call - return just the customer name
+            return customer_name
+            
+    except Exception as e:
+        frappe.log_error(f"Failed to get/create default customer: {str(e)}", "Default Customer Error")
+        # Return customer name even on error to avoid blocking orders
+        return customer_name if frappe.db.exists("Customer", customer_name) else None
+
 
 @frappe.whitelist()
 def getTable(room):

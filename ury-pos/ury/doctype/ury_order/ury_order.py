@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from erpnext.controllers.queries import item_query
-from ury.ury_pos.api import getBranch, getBranchRoom
+from ury.ury_pos.api import getBranch, getBranchRoom, get_or_create_default_customer
 from ury.ury.api.ury_kot_generate import kot_execute
 from ury.ury.api.ury_kot_generate import process_items_for_cancel_kot
 
@@ -194,16 +194,43 @@ def sync_order(
             )
             return {"status": "Failure"}
 
+    # Customer is optional - set to default if not provided
     if not customer:
-        frappe.throw("Please enter valid customer details")
-    else:
-        invoice.customer = customer
+        # Get or create default customer
+        customer = get_or_create_default_customer()
+
+    # If the returned customer is a dict (because the function is whitelisted
+    # and returns a dict for API calls), extract the actual customer name
+    # from the payload. This prevents passing a dict into frappe.get_doc
+    # which would cause SQL syntax errors.
+    if isinstance(customer, dict):
+        # Expected shape: { "success": True, "data": { "name": "Defoult Customer", ... } }
+        data = customer.get("data") if customer.get("data") else customer
+        # If nested data, try to get the name
+        if isinstance(data, dict):
+            customer_name = data.get("name") or data.get("customer_name")
+        else:
+            customer_name = None
+        customer = customer_name
+
+    # If still no customer name, try to fall back to a safe value or raise
+    if not customer:
+        frappe.log_error(f"No customer resolved in sync_order (raw value: {repr(customer)})", "Customer Resolution Error")
+        frappe.throw("Failed to determine customer for order")
+
+    invoice.customer = customer
 
     if order_type:
         invoice.order_type = order_type
 
-    customerdoc = frappe.get_doc("Customer", customer)
-    invoice.mobile_number = customerdoc.mobile_number
+    # Safely get customer document and mobile number
+    try:
+        customerdoc = frappe.get_doc("Customer", customer)
+        invoice.mobile_number = getattr(customerdoc, "mobile_number", None) or getattr(customerdoc, "mobile_no", None) or "0000000000"
+    except Exception as e:
+        frappe.log_error(f"Failed to get customer {customer}: {str(e)}", "Customer Fetch Error")
+        invoice.mobile_number = "0000000000"
+
     if comments:
         invoice.custom_comments = comments
     invoice.no_of_pax = no_of_pax

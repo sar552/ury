@@ -76,15 +76,12 @@ const OrderPanel = () => {
         throw new Error('User not logged in');
       }
 
-      // Validate customer/aggregator details
+      // Validate aggregator for Aggregators order type
       if (selectedOrderType === 'Aggregators') {
         if (!selectedAggregator?.customer) {
           showToast.error('Please select an aggregator before proceeding');
           return;
         }
-      } else if (!selectedCustomer?.name) {
-        showToast.error('Please select a customer before proceeding');
-        return;
       }
 
       // Validate table selection for dine-in orders
@@ -108,7 +105,7 @@ const OrderPanel = () => {
         order_type: selectedOrderType,
         table: selectedTable || undefined,
         room: selectedRoom || undefined,
-        customer: selectedOrderType === 'Aggregators' ? selectedAggregator?.customer : selectedCustomer?.name,
+        customer: selectedOrderType === 'Aggregators' ? selectedAggregator?.customer : (selectedCustomer?.name || null),
         aggregator_id: selectedOrderType === 'Aggregators' ? selectedAggregator?.customer : undefined,
         cashier: posProfile.cashier,
         owner: user.name,

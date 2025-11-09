@@ -12,7 +12,6 @@ import { getPaymentModes } from '../lib/payment-api';
 // Constants
 const MAX_QUANTITY = 99;
 const MIN_QUANTITY = 0;
-const ITEMS_PER_PAGE = 10;
 
 // Custom error class for cart operations
 class CartError extends Error {
@@ -479,8 +478,8 @@ export const usePOSStore = create<POSStore>((set, get) => ({
 
   processPayment: async (paymentMode: string, amount: number) => {
     try {
-      const { activeOrders, cartId, selectedCustomer, selectedOrderType } = get();
-      
+      const { cartId, selectedCustomer, selectedOrderType } = get();
+
       const order: Order = {
         id: uuidv4(),
         cartId: cartId!,
@@ -497,7 +496,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
 
       const newOrders = [...get().orders, order];
       set({ orders: newOrders });
-      
+
       await get().clearOrder();
     } catch (error) {
       set({ error: (error as Error).message });

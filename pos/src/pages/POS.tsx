@@ -4,7 +4,6 @@ import Sidebar from '../components/Sidebar';
 import OrderPanel from '../components/OrderPanel';
 import ProductDialog from '../components/ProductDialog';
 import MenuList from '../components/MenuList';
-import SearchBar from '../components/SearchBar';
 import { usePOSStore } from '../store/pos-store';
 import { cn } from '../lib/utils';
 import { Spinner } from '../components/ui/spinner';
@@ -12,8 +11,6 @@ import InitialLoader from '../components/InitialLoader';
 
 export default function POS() {
   const {
-    searchQuery,
-    setSearchQuery,
     quickFilter,
     setQuickFilter,
     setSelectedItem,
@@ -25,7 +22,7 @@ export default function POS() {
   } = usePOSStore();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSearch] = useState(false);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const clickCountRef = useRef(0);
 
