@@ -116,18 +116,13 @@ export default function Orders() {
 
     setIsPrintingAddress(true);
     try {
-      // Prepare data for QR code
-      const qrData = JSON.stringify({
-        name: (selectedOrder as any).customer_name || selectedOrder.customer,
-        phone: customerPhone,
-        address: customerAddress,
-        order: selectedOrder.name,
-      });
+      // QR code contains only the address/location
+      const qrData = customerAddress;
 
       // Generate QR code
       const qrCodeDataUrl = await generateQRCode(qrData);
 
-      const printWindow = window.open('', '', 'width=800,height=600');
+      const printWindow = window.open('', '', 'width=400,height=600');
       if (!printWindow) {
         throw new Error('Failed to open print window');
       }
@@ -136,7 +131,7 @@ export default function Orders() {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Customer Address - ${selectedOrder.name}</title>
+            <title>Address - ${selectedOrder.name}</title>
             <meta charset="utf-8">
             <style>
               * {
@@ -144,213 +139,144 @@ export default function Orders() {
                 padding: 0;
                 box-sizing: border-box;
               }
+              @page {
+                size: 58mm auto;
+                margin: 0;
+              }
               body { 
-                font-family: Arial, sans-serif;
-                padding: 30px;
-                line-height: 1.6;
-                max-width: 800px;
-                margin: 0 auto;
+                font-family: 'Courier New', monospace;
+                padding: 8px;
+                line-height: 1.3;
+                width: 58mm;
+                font-size: 11px;
               }
               .header {
-                border-bottom: 2px solid #333;
-                padding-bottom: 15px;
-                margin-bottom: 25px;
+                text-align: center;
+                border-bottom: 1px dashed #000;
+                padding-bottom: 6px;
+                margin-bottom: 8px;
               }
-              h1 {
-                font-size: 28px;
-                margin-bottom: 5px;
-                color: #333;
+              .title {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 3px;
               }
               .order-info {
-                font-size: 14px;
-                color: #666;
-              }
-              .content-wrapper {
-                display: flex;
-                gap: 30px;
-                margin-bottom: 30px;
-              }
-              .customer-section {
-                flex: 1;
-              }
-              .qr-section {
-                flex-shrink: 0;
-                text-align: center;
+                font-size: 10px;
               }
               .customer-name {
-                font-size: 20px;
+                font-size: 12px;
                 font-weight: bold;
-                color: #333;
-                margin-bottom: 15px;
+                margin-bottom: 6px;
+                text-align: center;
               }
-              .info-item {
-                margin-bottom: 20px;
+              .info-row {
+                margin-bottom: 6px;
+                font-size: 10px;
               }
               .info-label {
-                font-size: 12px;
-                color: #666;
-                text-transform: uppercase;
-                margin-bottom: 5px;
-                font-weight: 600;
+                font-weight: bold;
+                margin-bottom: 2px;
               }
               .info-content {
-                font-size: 16px;
-                color: #333;
-                background: #f5f5f5;
-                padding: 12px;
-                border-radius: 5px;
-                border: 1px solid #ddd;
-              }
-              .address-content {
-                white-space: pre-wrap;
                 word-wrap: break-word;
+                white-space: pre-wrap;
               }
-              .qr-code {
-                border: 2px solid #333;
-                padding: 15px;
-                border-radius: 8px;
-                background: white;
-                display: inline-block;
+              .qr-section {
+                text-align: center;
+                margin: 10px 0;
+                padding: 8px 0;
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
               }
               .qr-code img {
-                display: block;
-                width: 250px;
-                height: 250px;
+                width: 120px;
+                height: 120px;
+                display: inline-block;
               }
               .qr-label {
-                font-size: 12px;
-                color: #666;
-                margin-top: 10px;
+                font-size: 9px;
+                margin-top: 4px;
               }
               .footer {
-                margin-top: 30px;
-                padding-top: 15px;
-                border-top: 1px solid #ddd;
-                font-size: 12px;
-                color: #999;
+                margin-top: 8px;
+                padding-top: 6px;
+                border-top: 1px dashed #000;
+                font-size: 9px;
                 text-align: center;
               }
               .no-print {
-                margin-top: 20px;
+                margin-top: 15px;
                 text-align: center;
               }
               .no-print button {
-                padding: 10px 20px;
-                margin: 0 5px;
-                font-size: 14px;
+                padding: 8px 15px;
+                margin: 0 3px;
+                font-size: 12px;
                 cursor: pointer;
-                border: 1px solid #ddd;
-                border-radius: 5px;
+                border: 1px solid #333;
+                border-radius: 3px;
                 background: #fff;
               }
               .no-print button:hover {
-                background: #f5f5f5;
+                background: #f0f0f0;
               }
               .no-print button.primary {
-                background: #007bff;
+                background: #000;
                 color: white;
-                border-color: #007bff;
-              }
-              .no-print button.primary:hover {
-                background: #0056b3;
               }
               @media print {
-                body { padding: 20px; }
-                .no-print { display: none !important; }
+                body { 
+                  padding: 0;
+                  margin: 0;
+                }
+                .no-print { 
+                  display: none !important; 
+                }
               }
             </style>
           </head>
           <body>
             <div class="header">
-              <h1>Customer Delivery Information</h1>
-              <div class="order-info">Order: ${selectedOrder.name}</div>
+              <div class="title">DELIVERY INFO</div>
+              <div class="order-info">${selectedOrder.name}</div>
             </div>
             
-            <div class="content-wrapper">
-              <div class="customer-section">
-                <div class="customer-name">${(selectedOrder as any).customer_name || selectedOrder.customer}</div>
-                
-                <div class="info-item">
-                  <div class="info-label">Phone Number</div>
-                  <div class="info-content">${customerPhone || 'N/A'}</div>
-                </div>
+            <div class="customer-name">${(selectedOrder as any).customer_name || selectedOrder.customer}</div>
+            
+            ${customerPhone ? `
+            <div class="info-row">
+              <div class="info-label">Tel:</div>
+              <div class="info-content">${customerPhone}</div>
+            </div>
+            ` : ''}
 
-                <div class="info-item">
-                  <div class="info-label">Delivery Address</div>
-                  <div class="info-content address-content">${customerAddress}</div>
-                </div>
-              </div>
+            <div class="info-row">
+              <div class="info-label">Address:</div>
+              <div class="info-content">${customerAddress}</div>
+            </div>
 
-              <div class="qr-section">
-                <div class="qr-code">
-                  <img src="${qrCodeDataUrl}" alt="QR Code" />
-                </div>
-                <div class="qr-label">Scan for details</div>
+            <div class="qr-section">
+              <div class="qr-code">
+                <img src="${qrCodeDataUrl}" alt="QR Code" />
               </div>
+              <div class="qr-label">Location QR Code</div>
             </div>
 
             <div class="footer">
-              Printed on ${new Date().toLocaleString()}
+              ${new Date().toLocaleString('en-GB', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: '2-digit',
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
             </div>
 
             <div class="no-print">
               <button class="primary" onclick="window.print()">Print</button>
-              <button onclick="saveAsImage()">Save as Image</button>
               <button onclick="window.close()">Close</button>
             </div>
-
-            <script>
-              function saveAsImage() {
-                // Create canvas
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Set canvas size
-                canvas.width = 800;
-                canvas.height = 1000;
-                
-                // Fill white background
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw content (simplified - in production use html2canvas library)
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 24px Arial';
-                ctx.fillText('Customer Delivery Information', 30, 50);
-                
-                ctx.font = '14px Arial';
-                ctx.fillText('Order: ${selectedOrder.name}', 30, 80);
-                
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('${(selectedOrder as any).customer_name || selectedOrder.customer}', 30, 130);
-                
-                ctx.font = '14px Arial';
-                ctx.fillText('Phone: ${customerPhone || 'N/A'}', 30, 170);
-                
-                ctx.fillText('Address:', 30, 210);
-                const addressLines = '${customerAddress}'.split('\\n');
-                addressLines.forEach((line, i) => {
-                  ctx.fillText(line, 30, 240 + (i * 20));
-                });
-                
-                // Draw QR code
-                const qrImg = new Image();
-                qrImg.onload = function() {
-                  ctx.drawImage(qrImg, 500, 130, 250, 250);
-                  
-                  // Download
-                  canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'customer-address-${selectedOrder.name}.png';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  });
-                };
-                qrImg.src = '${qrCodeDataUrl}';
-              }
-            </script>
           </body>
         </html>
       `);

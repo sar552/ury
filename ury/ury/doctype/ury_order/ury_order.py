@@ -7,8 +7,7 @@ from frappe import _
 from frappe.model.document import Document
 from erpnext.controllers.queries import item_query
 from ury.ury_pos.api import getBranch, getBranchRoom, get_or_create_default_customer
-from ury.ury.api.ury_kot_generate import kot_execute
-from ury.ury.api.ury_kot_generate import process_items_for_cancel_kot
+from ury.ury.api.ury_kot_generate import kot_execute, process_items_for_cancel_kot
 
 from frappe import cache
 
