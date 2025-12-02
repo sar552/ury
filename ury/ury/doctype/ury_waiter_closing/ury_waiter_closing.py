@@ -144,17 +144,15 @@ def make_closing_entry_from_opening(waiter_opening):
 	if opening.status != "Open":
 		frappe.throw(_("Waiter Opening Entry is not open"))
 	
-	closing = frappe.new_doc("URY Waiter Closing")
-	closing.waiter_opening = opening.name
-	closing.period_start_date = opening.period_start_date
-	closing.period_end_date = now_datetime()
-	closing.pos_profile = opening.pos_profile
-	closing.user = opening.user
-	closing.company = opening.company
-	
-	# Invoices and totals will be loaded in validate()
-	
-	return closing
+	return {
+		"waiter_opening": opening.name,
+		"period_start_date": opening.period_start_date,
+		"period_end_date": now_datetime(),
+		"pos_profile": opening.pos_profile,
+		"user": opening.user,
+		"company": opening.company,
+		"waiter_profile": opening.waiter_profile if hasattr(opening, 'waiter_profile') else None
+	}
 
 
 @frappe.whitelist()

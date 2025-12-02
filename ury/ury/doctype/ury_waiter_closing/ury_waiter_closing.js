@@ -7,8 +7,7 @@ frappe.ui.form.on('URY Waiter Closing', {
 			return {
 				filters: {
 					status: 'Open',
-					docstatus: 1,
-					user: frappe.session.user
+					docstatus: 1
 				}
 			};
 		});
@@ -50,16 +49,44 @@ frappe.ui.form.on('URY Waiter Closing', {
 					if (r.message) {
 						let data = r.message;
 						
-						// Set basic fields
-						frm.set_value('period_start_date', data.period_start_date);
-						frm.set_value('period_end_date', data.period_end_date);
-						frm.set_value('pos_profile', data.pos_profile);
-						frm.set_value('user', data.user);
-						frm.set_value('company', data.company);
+						console.log('Waiter Opening Data:', data);
+						
+						// Set all fields from opening
+						if (data.period_start_date) {
+							frm.set_value('period_start_date', data.period_start_date);
+						}
+						if (data.period_end_date) {
+							frm.set_value('period_end_date', data.period_end_date);
+						}
+						if (data.pos_profile) {
+							frm.set_value('pos_profile', data.pos_profile);
+						}
+						if (data.user) {
+							frm.set_value('user', data.user);
+						}
+						if (data.company) {
+							frm.set_value('company', data.company);
+						}
+						if (data.waiter_profile) {
+							frm.set_value('waiter_profile', data.waiter_profile);
+						}
 						
 						frm.refresh_fields();
-						frm.save();
+						
+						// Show success message
+						frappe.show_alert({
+							message: __('Shift data loaded successfully'),
+							indicator: 'green'
+						}, 3);
 					}
+				},
+				error: function(r) {
+					console.error('Error loading waiter opening:', r);
+					frappe.msgprint({
+						title: __('Error'),
+						indicator: 'red',
+						message: __('Failed to load waiter opening data. Please try again.')
+					});
 				}
 			});
 		}
