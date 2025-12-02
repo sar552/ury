@@ -11,7 +11,9 @@ app_icon_title = "URY"
 required_apps = ["erpnext"]
 # Includes in <head>
 # ------------------
-
+doctype_js = {
+    "POS Closing Entry": "public/js/pos_closing_entry.js"
+}
 # include js, css files in header of desk.html
 # app_include_css = "/assets/ury/css/ury.css"
 app_include_js = [
@@ -243,6 +245,18 @@ scheduler_events = {
 # ]
 
 fixtures = [
+        {
+        "dt": "Property Setter",
+        "filters": [
+            ["doc_type", "=", "POS Closing Entry"]
+        ]
+    },
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "=", "POS Closing Entry"]
+        ]
+    },
     {
         "doctype": "Custom Field",
         "filters": [
