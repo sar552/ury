@@ -1,0 +1,536 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:profile_name",
+ "creation": "2025-12-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "profile_name",
+  "disabled",
+  "column_break_3",
+  "company",
+  "branch",
+  "restaurant",
+  "shift_management_section",
+  "enable_shift_management",
+  "current_opening",
+  "current_closing",
+  "section_break_5",
+  "applicable_for_waiters",
+  "section_break_8",
+  "warehouse",
+  "selling_price_list",
+  "currency",
+  "column_break_12",
+  "customer",
+  "territory",
+  "campaign",
+  "company_address",
+  "section_break_16",
+  "item_groups",
+  "column_break_18",
+  "customer_groups",
+  "kot_settings_section",
+  "kot_naming_series",
+  "kot_alert",
+  "kot_alert_sound",
+  "column_break_kot1",
+  "kot_warning_time",
+  "reset_order_number_daily",
+  "notify_kot_delay",
+  "kot_recipients",
+  "column_break_kot2",
+  "enable_kot_reprint",
+  "parcel_order_printer",
+  "table_order_printer",
+  "reprint_kot_format",
+  "pos_restrictions_section",
+  "transfer_role_permissions",
+  "ury_pos_settings_section",
+  "view_all_status",
+  "remove_items",
+  "show_image",
+  "column_break_pos1",
+  "require_daily_pos_closing",
+  "enable_discount",
+  "enable_order_type_edit",
+  "configuration_section",
+  "hide_images",
+  "hide_unavailable_items",
+  "auto_add_item_to_cart",
+  "validate_stock_on_save",
+  "print_receipt_on_order_complete",
+  "column_break_24",
+  "update_stock",
+  "ignore_pricing_rule",
+  "allow_rate_change",
+  "allow_discount_change",
+  "print_settings_section",
+  "print_format",
+  "letter_head",
+  "column_break_38",
+  "tc_name",
+  "select_print_heading"
+ ],
+ "fields": [
+  {
+   "fieldname": "profile_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Profile Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "restaurant",
+   "fieldtype": "Link",
+   "label": "Restaurant",
+   "options": "URY Restaurant"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "shift_management_section",
+   "fieldtype": "Section Break",
+   "label": "Shift Management"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_shift_management",
+   "fieldtype": "Check",
+   "label": "Enable Shift Management"
+  },
+  {
+   "depends_on": "enable_shift_management",
+   "fieldname": "current_opening",
+   "fieldtype": "Link",
+   "label": "Current Opening",
+   "options": "URY Waiter Opening",
+   "read_only": 1
+  },
+  {
+   "depends_on": "enable_shift_management",
+   "fieldname": "current_closing",
+   "fieldtype": "Link",
+   "label": "Current Closing",
+   "options": "URY Waiter Closing",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break",
+   "label": "Applicable for Waiters"
+  },
+  {
+   "description": "Select users who can use this waiter profile",
+   "fieldname": "applicable_for_waiters",
+   "fieldtype": "Table",
+   "label": "Applicable for Waiters",
+   "options": "URY Waiter Profile User"
+  },
+  {
+   "fieldname": "section_break_8",
+   "fieldtype": "Section Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "selling_price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "options": "Price List",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Default customer for orders",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Default Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "label": "Territory",
+   "options": "Territory"
+  },
+  {
+   "fieldname": "campaign",
+   "fieldtype": "Link",
+   "label": "Campaign",
+   "options": "Campaign"
+  },
+  {
+   "fieldname": "company_address",
+   "fieldtype": "Link",
+   "label": "Company Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break",
+   "label": "Filters"
+  },
+  {
+   "description": "Only show items from these groups",
+   "fieldname": "item_groups",
+   "fieldtype": "Table",
+   "label": "Item Groups",
+   "options": "POS Item Group"
+  },
+  {
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Only show customers from these groups",
+   "fieldname": "customer_groups",
+   "fieldtype": "Table",
+   "label": "Customer Groups",
+   "options": "POS Customer Group"
+  },
+  {
+   "fieldname": "kot_settings_section",
+   "fieldtype": "Section Break",
+   "label": "KOT Settings"
+  },
+  {
+   "fieldname": "kot_naming_series",
+   "fieldtype": "Data",
+   "label": "URY KOT Naming Series"
+  },
+  {
+   "default": "0",
+   "fieldname": "kot_alert",
+   "fieldtype": "Check",
+   "label": "Enable KOT Audio Alert"
+  },
+  {
+   "depends_on": "kot_alert",
+   "fieldname": "kot_alert_sound",
+   "fieldtype": "Attach",
+   "label": "KOT Alert Sound",
+   "mandatory_depends_on": "kot_alert"
+  },
+  {
+   "fieldname": "column_break_kot1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "kot_warning_time",
+   "fieldtype": "Int",
+   "label": "KOT Warning Time (minutes)"
+  },
+  {
+   "default": "0",
+   "fieldname": "reset_order_number_daily",
+   "fieldtype": "Check",
+   "label": "Reset Order Number Daily"
+  },
+  {
+   "default": "0",
+   "fieldname": "notify_kot_delay",
+   "fieldtype": "Check",
+   "label": "Notify KOT Delay"
+  },
+  {
+   "depends_on": "notify_kot_delay",
+   "fieldname": "kot_recipients",
+   "fieldtype": "Table",
+   "label": "Recipients",
+   "mandatory_depends_on": "notify_kot_delay",
+   "options": "URY Notification Recipient"
+  },
+  {
+   "fieldname": "column_break_kot2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_kot_reprint",
+   "fieldtype": "Check",
+   "label": "Enable KOT Reprint"
+  },
+  {
+   "depends_on": "eval:doc.enable_kot_reprint",
+   "fieldname": "parcel_order_printer",
+   "fieldtype": "Link",
+   "label": "Parcel Order Printer",
+   "options": "Network Printer Settings"
+  },
+  {
+   "depends_on": "eval:doc.enable_kot_reprint",
+   "fieldname": "table_order_printer",
+   "fieldtype": "Link",
+   "label": "Table Order Printer",
+   "options": "Network Printer Settings"
+  },
+  {
+   "depends_on": "eval:doc.enable_kot_reprint",
+   "fieldname": "reprint_kot_format",
+   "fieldtype": "Link",
+   "label": "Reprint KOT Format",
+   "options": "Print Format"
+  },
+  {
+   "fieldname": "pos_restrictions_section",
+   "fieldtype": "Section Break",
+   "label": "URY POS Restrictions"
+  },
+  {
+   "description": "This role grants permissions for Captain Transfer with access to all tables",
+   "fieldname": "transfer_role_permissions",
+   "fieldtype": "Table",
+   "label": "Role Permitted For Captain Transfer",
+   "options": "Role Permitted"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "ury_pos_settings_section",
+   "fieldtype": "Section Break",
+   "label": "URY POS Settings"
+  },
+  {
+   "default": "0",
+   "description": "Enables Waiters to view all statuses (Paid, Consolidated, Return Invoices) in the recent order.",
+   "fieldname": "view_all_status",
+   "fieldtype": "Check",
+   "label": "Allow Waiter To View All Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "remove_items",
+   "fieldtype": "Check",
+   "label": "Allow Waiter To Edit And Remove Table Order Items"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_image",
+   "fieldtype": "Check",
+   "label": "Show Item Image In URY POS"
+  },
+  {
+   "fieldname": "column_break_pos1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Validate that the previous day's POS is closed before opening a new shift",
+   "fieldname": "require_daily_pos_closing",
+   "fieldtype": "Check",
+   "label": "Require Daily POS Closing"
+  },
+  {
+   "default": "0",
+   "description": "Enable discount feature in URY POS",
+   "fieldname": "enable_discount",
+   "fieldtype": "Check",
+   "label": "Enable Discount"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_order_type_edit",
+   "fieldtype": "Check",
+   "label": "Enable Order Type Edit"
+  },
+  {
+   "fieldname": "configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration"
+  },
+  {
+   "default": "0",
+   "fieldname": "hide_images",
+   "fieldtype": "Check",
+   "label": "Hide Images"
+  },
+  {
+   "default": "0",
+   "fieldname": "hide_unavailable_items",
+   "fieldtype": "Check",
+   "label": "Hide Unavailable Items"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_add_item_to_cart",
+   "fieldtype": "Check",
+   "label": "Automatically Add Filtered Item To Cart"
+  },
+  {
+   "default": "0",
+   "fieldname": "validate_stock_on_save",
+   "fieldtype": "Check",
+   "label": "Validate Stock on Save"
+  },
+  {
+   "default": "0",
+   "fieldname": "print_receipt_on_order_complete",
+   "fieldtype": "Check",
+   "label": "Print Receipt on Order Complete"
+  },
+  {
+   "fieldname": "column_break_24",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "update_stock",
+   "fieldtype": "Check",
+   "label": "Update Stock"
+  },
+  {
+   "default": "0",
+   "fieldname": "ignore_pricing_rule",
+   "fieldtype": "Check",
+   "label": "Ignore Pricing Rule"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_rate_change",
+   "fieldtype": "Check",
+   "label": "Allow User to Edit Rate"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_discount_change",
+   "fieldtype": "Check",
+   "label": "Allow User to Edit Discount"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "print_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Print Settings"
+  },
+  {
+   "fieldname": "print_format",
+   "fieldtype": "Link",
+   "label": "Print Format",
+   "options": "Print Format"
+  },
+  {
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "column_break_38",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tc_name",
+   "fieldtype": "Link",
+   "label": "Terms and Conditions",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "select_print_heading",
+   "fieldtype": "Link",
+   "label": "Print Heading",
+   "options": "Print Heading"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Opening & Closing",
+   "link_doctype": "URY Waiter Opening",
+   "link_fieldname": "waiter_profile"
+  },
+  {
+   "group": "Opening & Closing",
+   "link_doctype": "URY Waiter Closing",
+   "link_fieldname": "waiter_profile"
+  }
+ ],
+ "modified": "2025-12-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "URY",
+ "name": "URY Waiter Profile",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "URY Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "URY Cashier"
+  },
+  {
+   "read": 1,
+   "role": "URY waiter"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

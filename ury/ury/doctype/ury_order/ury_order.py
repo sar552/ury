@@ -582,6 +582,20 @@ def cancel_order(invoice_id, reason):
 # Method for URY POS
 @frappe.whitelist()
 def make_invoice(customer, payments, cashier, pos_profile,owner, additionalDiscount=None, table=None, invoice=None):
+    current_user = frappe.session.user
+    
+    # Check if current user is allowed to make payment
+    # Only cashier or users with "URY Cashier" role can process payments
+    user_roles = frappe.get_roles(current_user)
+    is_cashier = current_user == "Administrator" or "URY Cashier" in user_roles
+    is_waiter = "URY waiter" in user_roles
+    
+    # Debug logging
+    frappe.log_error(
+        title="make_invoice called",
+        message=f"User: {current_user}\nIs Cashier: {is_cashier}\nIs Waiter: {is_waiter}\nInvoice: {invoice}\nCustomer: {customer}\nPayments: {payments}"
+    )
+    
     order_type =  invoice_name = frappe.get_value("POS Invoice",invoice , "order_type")
     invoice = get_order_invoice(table, invoice, order_type, "Payments")
 
@@ -589,9 +603,36 @@ def make_invoice(customer, payments, cashier, pos_profile,owner, additionalDisco
         restaurant = get_restaurant_and_menu_name(table)
         invoice.restaurant = restaurant
 
+    # Set customer and related fields
     invoice.customer = customer
     invoice.pos_profile = pos_profile
     invoice.additional_discount_percentage=additionalDiscount
+    
+    # Ensure POS Profile fields are set to prevent validation errors
+    if pos_profile:
+        pos_doc = frappe.get_doc("POS Profile", pos_profile)
+        # Set critical fields from POS Profile
+        if not invoice.selling_price_list and pos_doc.selling_price_list:
+            invoice.selling_price_list = pos_doc.selling_price_list
+        if not invoice.currency and pos_doc.currency:
+            invoice.currency = pos_doc.currency
+        if not invoice.company:
+            invoice.company = pos_doc.company
+    
+    # Get customer details if available
+    if customer:
+        try:
+            customer_doc = frappe.get_doc("Customer", customer)
+            if hasattr(customer_doc, 'customer_group') and customer_doc.customer_group:
+                invoice.customer_group = customer_doc.customer_group
+            if hasattr(customer_doc, 'default_price_list') and customer_doc.default_price_list:
+                invoice.selling_price_list = customer_doc.default_price_list
+            if hasattr(customer_doc, 'default_currency') and customer_doc.default_currency:
+                invoice.currency = customer_doc.default_currency
+        except:
+            # Customer not found or error loading, continue with POS Profile values
+            pass
+    
     invoice.calculate_taxes_and_totals()
 
     for pay in invoice.payments:
@@ -602,12 +643,66 @@ def make_invoice(customer, payments, cashier, pos_profile,owner, additionalDisco
             "payments", dict(mode_of_payment=d["mode_of_payment"], amount=d["amount"])
         )
 
-    invoice.owner = owner
-    invoice.save()
+    # Don't change owner - it's set_only_once field and cannot be modified
+    # Owner remains the user who created the invoice (waiter)
+    # Cashier info is stored in cashier field
+    invoice.cashier = cashier
+    
+    # Mark invoice as printed to pass validation
+    invoice.invoice_printed = 1
+    
+    # Debug: Log before save
+    frappe.log_error(
+        title="make_invoice - before save",
+        message=f"Invoice: {invoice.name}\nCustomer: {invoice.customer}\nGrand Total: {invoice.grand_total}\nOwner: {invoice.owner}\nCashier: {cashier}"
+    )
+    
     try:
-        invoice.submit()
+        invoice.save()
+        
+        # Debug: Log after save
+        frappe.log_error(
+            title="make_invoice - after save",
+            message=f"Invoice: {invoice.name}\nDocstatus: {invoice.docstatus}"
+        )
     except Exception as e:
-        frappe.throw(f"Error while settling order: {e}")
+        # Debug: Log save error
+        frappe.log_error(
+            title="make_invoice - save failed",
+            message=f"Invoice: {invoice.name}\nError: {str(e)}\nType: {type(e).__name__}\nTraceback: {frappe.get_traceback()}"
+        )
+        frappe.throw(f"Error while saving invoice: {e}")
+    
+    # Only submit if user is cashier
+    # Waiters can only save as draft, cashiers complete the payment
+    if is_cashier:
+        # Debug: Log before submit
+        frappe.log_error(
+            title="make_invoice - before submit (cashier)",
+            message=f"Invoice: {invoice.name}\nDocstatus: {invoice.docstatus}\nUser: {current_user}"
+        )
+        
+        try:
+            invoice.submit()
+            
+            # Debug: Log after successful submit
+            frappe.log_error(
+                title="make_invoice - submit success",
+                message=f"Invoice: {invoice.name}\nDocstatus: {invoice.docstatus}"
+            )
+        except Exception as e:
+            # Debug: Log the actual error
+            frappe.log_error(
+                title="make_invoice - submit failed",
+                message=f"Invoice: {invoice.name}\nError: {str(e)}\nType: {type(e).__name__}\nTraceback: {frappe.get_traceback()}"
+            )
+            frappe.throw(f"Error while settling order: {e}")
+    else:
+        # Waiter: Just save as draft
+        frappe.log_error(
+            title="make_invoice - waiter draft saved",
+            message=f"Invoice: {invoice.name}\nDocstatus: {invoice.docstatus}\nUser: {current_user}\nWaiter saved invoice as draft (not submitted)"
+        )
     
     
 

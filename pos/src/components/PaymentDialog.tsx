@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Percent, Coins } from 'lucide-react';
 import { usePOSStore } from '../store/pos-store';
-import { cn, formatCurrency } from '../lib/utils';
+import { formatCurrency } from '../lib/utils';
 import { Button, Input, Dialog, DialogContent } from './ui';
 import { call } from '../lib/frappe-sdk';
 
@@ -125,7 +125,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       clearSelectedOrder();
       await fetchOrders();
     } catch (err) {
-      setError((err as Error).message);
+      console.error('Payment error:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
+      setError((err as Error).message || 'Payment failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }

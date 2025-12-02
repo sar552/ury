@@ -502,7 +502,42 @@ def getPosProfile():
     printer = None
     cashier = None
     owner = None
-    posProfile = frappe.db.exists("POS Profile", {"branch": branchName})
+    
+    # Check if user is waiter with open waiter shift
+    user_roles = frappe.get_roles(waiter)
+    is_waiter = "URY waiter" in user_roles
+
+    # Debug logging
+    frappe.logger().info(f"getPosProfile - User: {waiter}, Roles: {user_roles}, Is Waiter: {is_waiter}")
+
+    # If waiter, get POS Profile from URY Waiter Opening
+    if is_waiter:
+        waiter_opening = frappe.db.get_value(
+            "URY Waiter Opening",
+            {
+                "user": waiter,
+                "status": "Open",
+                "docstatus": 1
+            },
+            ["name", "pos_profile", "waiter_profile"],
+            as_dict=True
+        )
+
+        frappe.logger().info(f"Waiter Opening Found: {waiter_opening}")
+
+        if not waiter_opening:
+            frappe.throw(_("No open waiter shift found. Please open your shift first from URY Waiter Opening."))
+
+        if waiter_opening.pos_profile:
+            posProfile = waiter_opening.pos_profile
+        else:
+            frappe.throw(_("No POS Profile linked to your waiter opening."))
+    else:
+        # For cashier, use standard POS Profile
+        posProfile = frappe.db.exists("POS Profile", {"branch": branchName})
+        if not posProfile:
+            frappe.throw(_("No POS Profile found for branch {0}").format(branchName))
+    
     pos_profiles = frappe.get_doc("POS Profile", posProfile)
     global_defaults = frappe.get_single('Global Defaults')
     disable_rounded_total = global_defaults.disable_rounded_total
@@ -594,7 +629,8 @@ def getPosProfile():
         "multiple_cashier":multiple_cashier,
         "owner":owner,
         "edit_order_type":edit_order_type,
-        "enable_kot_reprint":enable_kot_reprint
+        "enable_kot_reprint":enable_kot_reprint,
+        "is_waiter": is_waiter
 
     }
 
@@ -634,17 +670,41 @@ def getPosInvoiceItems(invoice):
 @frappe.whitelist()
 def posOpening():
     branchName = getBranch()
+    current_user = frappe.session.user
+    
+    # Check for POS Opening Entry (cashier)
     pos_opening_list = frappe.get_all(
         "POS Opening Entry",
         fields=["name", "docstatus", "status", "posting_date"],
         filters={"branch": branchName},
     )
+    
+    # Check for URY Waiter Opening (waiter)
+    waiter_opening = frappe.db.get_value(
+        "URY Waiter Opening",
+        {
+            "user": current_user,
+            "status": "Open",
+            "docstatus": 1
+        },
+        "name"
+    )
+    
     flag = 1
-    for pos_opening in pos_opening_list:
-        if pos_opening.status == "Open" and pos_opening.docstatus == 1:
-            flag = 0
+    
+    # If waiter has an open shift, allow access
+    if waiter_opening:
+        flag = 0
+    else:
+        # Check cashier opening
+        for pos_opening in pos_opening_list:
+            if pos_opening.status == "Open" and pos_opening.docstatus == 1:
+                flag = 0
+                break
+    
     if flag == 1:
-        frappe.msgprint(title="Message", indicator="red", msg=("Please Open POS Entry"))
+        frappe.msgprint(title="Message", indicator="red", msg=("Please Open POS Entry or Waiter Shift"))
+    
     return flag
 
 

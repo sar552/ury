@@ -1,0 +1,1 @@
+# URY Waiter Profile DocType

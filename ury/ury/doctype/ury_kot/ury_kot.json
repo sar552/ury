@@ -28,6 +28,7 @@
   "kot_items",
   "section_break_zpwun",
   "naming_series",
+  "waiter_profile",
   "pos_profile",
   "comments",
   "branch",
@@ -160,6 +161,14 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "naming_series",
+   "read_only": 1
+  },
+  {
+   "fieldname": "waiter_profile",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Waiter Profile",
+   "options": "URY Waiter Profile",
    "read_only": 1
   },
   {

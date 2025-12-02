@@ -1,0 +1,76 @@
+<h5>{{ __("Payment Reconciliation") }}</h5>
+<table class="table table-bordered table-condensed">
+	<thead>
+		<tr>
+			<th>{{ __("Mode of Payment") }}</th>
+			<th class="text-right">{{ __("Opening Amount") }}</th>
+			<th class="text-right">{{ __("Expected Amount") }}</th>
+			<th class="text-right">{{ __("Closing Amount") }}</th>
+			<th class="text-right">{{ __("Difference") }}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for row in data.payment_reconciliation %}
+		<tr>
+			<td>{{ row.mode_of_payment }}</td>
+			<td class="text-right">{{ frappe.format(row.opening_amount, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+			<td class="text-right">{{ frappe.format(row.expected_amount, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+			<td class="text-right">{{ frappe.format(row.closing_amount, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+			<td class="text-right {% if row.difference != 0 %}text-danger{% endif %}">
+				{{ frappe.format(row.difference, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}
+			</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>{{ __("Total") }}</th>
+			<th class="text-right">{{ frappe.format(data.payment_reconciliation | sum(attribute='opening_amount'), {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</th>
+			<th class="text-right">{{ frappe.format(data.payment_reconciliation | sum(attribute='expected_amount'), {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</th>
+			<th class="text-right">{{ frappe.format(data.payment_reconciliation | sum(attribute='closing_amount'), {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</th>
+			<th class="text-right">{{ frappe.format(data.payment_reconciliation | sum(attribute='difference'), {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</th>
+		</tr>
+	</tfoot>
+</table>
+
+<h5>{{ __("Summary") }}</h5>
+<table class="table table-bordered table-condensed">
+	<tr>
+		<td>{{ __("Total Invoices") }}</td>
+		<td class="text-right">{{ data.pos_transactions | length }}</td>
+	</tr>
+	<tr>
+		<td>{{ __("Grand Total") }}</td>
+		<td class="text-right">{{ frappe.format(data.grand_total, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+	</tr>
+	<tr>
+		<td>{{ __("Net Total") }}</td>
+		<td class="text-right">{{ frappe.format(data.net_total, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+	</tr>
+	<tr>
+		<td>{{ __("Total Quantity") }}</td>
+		<td class="text-right">{{ data.total_quantity }}</td>
+	</tr>
+</table>
+
+{% if data.taxes %}
+<h5>{{ __("Taxes") }}</h5>
+<table class="table table-bordered table-condensed">
+	<thead>
+		<tr>
+			<th>{{ __("Account Head") }}</th>
+			<th class="text-right">{{ __("Rate") }}</th>
+			<th class="text-right">{{ __("Amount") }}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for tax in data.taxes %}
+		<tr>
+			<td>{{ tax.account_head }}</td>
+			<td class="text-right">{{ tax.rate }}%</td>
+			<td class="text-right">{{ frappe.format(tax.amount, {'fieldtype': 'Currency', 'options': 'currency'}, {'currency': currency}) }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endif %}

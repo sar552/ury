@@ -49,25 +49,16 @@ export const createConfigSlice: StateCreator<
 > = (set, get) => ({
   ...initialState,
 
-  fetchPosProfile: async (forceRefresh = false) => {
+  fetchPosProfile: async (_forceRefresh = false) => {
     try {
       set({ isLoading: true, error: null });
 
-      // Check session storage first if not forcing refresh
-      const cached = sessionStorage.getItem('posProfile');
-      if (cached && !forceRefresh) {
-        const profile = JSON.parse(cached);
-        set({ posProfile: profile });
-        // Extract and set allowed roles from the profile
-        const allowedRoles = profile.role_allowed_for_billing?.map((role: RolePermission) => role.role) || [];
-        console.log("allowedRoles", allowedRoles);
-        get().setAllowedRoles(allowedRoles);
-        set({ isLoading: false });
-        return;
-      }
-
-      // If not in cache or forcing refresh, fetch from API
+      // Always fetch fresh data to ensure is_waiter flag is current
+      // Cache can cause issues with waiter shift status
       const profile = await getCombinedPosProfile();
+      
+      console.log("fetchPosProfile - profile:", profile);
+      console.log("fetchPosProfile - is_waiter:", profile.is_waiter);
       
       // Cache the profile
       sessionStorage.setItem('posProfile', JSON.stringify(profile));
@@ -75,6 +66,7 @@ export const createConfigSlice: StateCreator<
 
       // Extract and set allowed roles from the profile
       const allowedRoles = profile.role_allowed_for_billing?.map((role: RolePermission) => role.role) || [];
+      console.log("allowedRoles", allowedRoles);
       get().setAllowedRoles(allowedRoles);
       set({ isLoading: false });
     } catch (error) {
@@ -87,15 +79,32 @@ export const createConfigSlice: StateCreator<
 
   checkAccess: () => {
     const { user } = get();
-    const { allowedRoles } = get();
+    const { allowedRoles, posProfile } = get();
 
-    if (!user || !user.roles || !allowedRoles.length) {
+    console.log("checkAccess - user:", user);
+    console.log("checkAccess - allowedRoles:", allowedRoles);
+    console.log("checkAccess - posProfile?.is_waiter:", posProfile?.is_waiter);
+
+    if (!user || !user.roles) {
       set({ hasAccess: false });
       return;
     }
 
-    // Check if user has any of the allowed roles
+    // If user is a waiter with an open shift, allow access
+    if (posProfile?.is_waiter) {
+      console.log("User is a waiter with open shift - granting access");
+      set({ hasAccess: true, error: null });
+      return;
+    }
+
+    // For non-waiters, check if user has any of the allowed roles
+    if (!allowedRoles.length) {
+      set({ hasAccess: false });
+      return;
+    }
+
     const hasAccess = user.roles.some(role => allowedRoles.includes(role));
+    console.log("checkAccess - hasAccess:", hasAccess);
     set({ hasAccess });
 
     // If no access, we could redirect or show an error message

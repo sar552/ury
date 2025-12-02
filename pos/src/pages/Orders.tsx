@@ -788,8 +788,8 @@ export default function Orders() {
                 >
                   {isPrinting ? <Spinner className="w-5 h-5" hideMessage /> : <Printer className="w-5 h-5" />}
                 </Button>
-                {/* Payment Button */}
-                {(selectedOrder.status === 'Draft' || selectedOrder.status === 'Unbilled' || selectedOrder.status === 'Recently Paid') && (
+                {/* Payment Button - Only for Cashier, hidden for Waiter */}
+                {!posStore.posProfile?.is_waiter && (selectedOrder.status === 'Draft' || selectedOrder.status === 'Unbilled' || selectedOrder.status === 'Recently Paid') && (
                   <Button
                     className="flex-1"
                     onClick={() => {

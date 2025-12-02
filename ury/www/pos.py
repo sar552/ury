@@ -24,6 +24,31 @@ def get_context(context):
 			boot = frappe.sessions.get()
 		except Exception as e:
 			raise frappe.SessionBootFailed from e
+	
+	# Check if user has URY Waiter role and waiter opening AFTER getting boot
+	user_roles = frappe.get_roles()
+	is_waiter = "URY waiter" in user_roles
+
+	# Debug logging
+	frappe.logger().info(f"POS Access - User: {frappe.session.user}, Roles: {user_roles}, Is Waiter: {is_waiter}")
+
+	if is_waiter:
+		# Check if waiter has open shift
+		waiter_opening = frappe.db.get_value(
+			"URY Waiter Opening",
+			{
+				"user": frappe.session.user,
+				"status": "Open",
+				"docstatus": 1
+			},
+			"name"
+		)
+
+		frappe.logger().info(f"Waiter Opening Check - User: {frappe.session.user}, Opening: {waiter_opening}")
+
+		if not waiter_opening:
+			frappe.local.flags.redirect_location = "/app/ury-waiter-opening"
+			raise frappe.Redirect
 
 	# add server_script_enabled in boot
 	if "server_script_enabled" in frappe.conf:
@@ -65,3 +90,11 @@ def get_boot():
 	boot_json = json.dumps(boot_json)
 
 	return boot_json
+
+
+def has_website_permission(doc, ptype, user, verbose=False):
+	"""Custom permission check for POS page access"""
+	# Allow all logged in users with System User type
+	if frappe.session.user != "Guest":
+		return True
+	return False

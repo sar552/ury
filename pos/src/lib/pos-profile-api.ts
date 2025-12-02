@@ -21,6 +21,7 @@ export interface PosProfileLimited {
   multiple_cashier: number;
   owner: string;
   edit_order_type?: number;
+  is_waiter: boolean;
 }
 
 export interface PosProfileLimitedResponse {
@@ -84,6 +85,7 @@ export interface PosProfileCombined extends PosProfileFull {
   edit_order_type?: number;
   view_all_status?: number;
   custom_daily_pos_close?: number;
+  is_waiter: boolean;
 }
 
 export interface Currency {
@@ -133,6 +135,7 @@ export async function getCombinedPosProfile(): Promise<PosProfileCombined> {
     enable_discount: limitedProfile.enable_discount,
     multiple_cashier: limitedProfile.multiple_cashier,
     edit_order_type: limitedProfile.edit_order_type,
+    is_waiter: limitedProfile.is_waiter,
   };
 
   return combinedProfile;
